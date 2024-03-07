@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Admin {
+  adminId          String    @id @default(auto()) @map("_id") @db.ObjectId
+  firstName        String?
+  lastName         String?
+  username         String    @unique
+  email            String    @unique
+  password         String
+  emailVerifiedAt  DateTime?
+  emailVerifyToken String?
+  registration     DateTime  @default(now())
+  lastLogin        DateTime  @default(now())
+  deleted          Boolean   @default(false)
+  profileUrl       String?
+  profileKeyUrl    String?
+  role             String    @default("admin")
+}
+
+model Artist {
+  ArtistId         String    @id @default(auto()) @map("_id") @db.ObjectId
+  profileUrl       String?
+  profileKeyUrl    String?
+  username         String    @unique
+  aboutMe          String?
+  email            String    @unique
+  emailVerifiedAt  DateTime?
+  emailVerifyToken String?
+  password         String
+  firstName        String?
+  lastName         String?
+  suffix           String?
+  novels           Novel[]   @relation("ArtistToNovel")
+  verifiedStatus   Boolean   @default(false)
+  totalNovelLikes  Int       @default(0) // Track cumulative likes
+  totalNovelViews  Int       @default(0) // Track cumulative views
+  registration     DateTime  @default(now())
+  lastLogin        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  role             String    @default("artist")
+}
+
+model Like {
+  likeId    String   @id @default(auto()) @map("_id") @db.ObjectId
+  novel     Novel    @relation("NovelToLikes", fields: [novelId], references: [novelId])
+  novelId   String   @db.ObjectId
+  createdAt DateTime @default(now())
+}
+
+model Novel {
+  novelId       String    @id @default(auto()) @map("_id") @db.ObjectId
+  ArtistId      String    @db.ObjectId
+  chapters      Chapter[] @relation("NovelToChapters")
+  title         String
+  genre         String
+  synopsis      String
+  visibility    Boolean   @default(true)
+  pinyaApproved Boolean   @default(false)
+  totalViews    Int       @default(0)
+  totalLikes    Int       @default(0)
+  likes         Like[]    @relation("NovelToLikes")
+  Artist        Artist    @relation("ArtistToNovel", fields: [ArtistId], references: [ArtistId])
+  coverPhoto    String
+}
+
+model Chapter {
+  chapterId     String   @id @default(auto()) @map("_id") @db.ObjectId
+  novel         Novel    @relation("NovelToChapters", fields: [novelId], references: [novelId])
+  novelId       String   @db.ObjectId
+  title         String
+  content       String
+  pinyaApproved Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  visibility    Boolean  @default(true)
+}
+
+model User {
+  adminId          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  email            String    @unique
+  password         String
+  emailVerifiedAt  DateTime?
+  emailVerifyToken String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
